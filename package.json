@@ -1,0 +1,31 @@
+{
+	"name": "helpspeaking-downloader",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"deploy": "wrangler deploy",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
+		"format": "oxfmt",
+		"format:check": "oxfmt --check"
+	},
+	"dependencies": {
+		"@cloudflare/puppeteer": "^1.0.6",
+		"effect": "^3.19.19"
+	},
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "^1.25.5",
+		"@cloudflare/workers-types": "^4.20260305.0",
+		"@effect/language-service": "^0.76.0",
+		"oxfmt": "^0.35.0",
+		"oxlint": "^1.50.0",
+		"typescript": "~5.9.3",
+		"vite": "^7.3.1",
+		"wrangler": "^4.68.1"
+	},
+	"packageManager": "pnpm@10.30.2"
+}

@@ -1,0 +1,7 @@
+name = "helpspeaking-downloader"
+compatibility_date = "2025-08-23"
+main = "./src/index.ts"
+compatibility_flags = ["nodejs_compat"]
+
+[browser]
+binding = "BROWSER"
