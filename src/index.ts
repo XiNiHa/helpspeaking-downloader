@@ -1,23 +1,39 @@
-import puppeteer from "@cloudflare/puppeteer";
-import { Context, Effect, pipe } from "effect";
-
-class CloudflareEnv extends Context.Tag("CloudflareEnv")<CloudflareEnv, Cloudflare.Env>() {}
-
-const runApp = Effect.gen(function* () {
-	const env = yield* CloudflareEnv;
-	const browser = yield* Effect.tryPromise(() => puppeteer.launch(env.BROWSER));
-	const page = yield* Effect.tryPromise(() => browser.newPage());
-	yield* Effect.tryPromise(() => page.goto("https://helpspeaking.kr"));
-	const img = yield* Effect.tryPromise(() => page.screenshot());
-	return img;
-});
+import { Effect, pipe } from "effect";
+import { createDebugLogger } from "./logging";
+import { runTransferWorkflow } from "./workflow";
 
 export default {
-	async fetch(_, env) {
-		const img = await Effect.runPromise(pipe(runApp, Effect.provideService(CloudflareEnv, env)));
-
-		return new Response(img, {
-			headers: { "Content-Type": "image/png" },
+	scheduled(controller, env, context) {
+		const requestId = crypto.randomUUID();
+		const startedAt = new Date().toISOString();
+		const logger = createDebugLogger(requestId);
+		logger("handler.accepted", "Accepted transfer request", {
+			cron: controller.cron,
+			scheduledTime: new Date(controller.scheduledTime).toISOString(),
+			startedAt,
 		});
+
+		const job = pipe(
+			runTransferWorkflow({
+				env,
+				logger,
+			}),
+			Effect.tap((result) =>
+				Effect.sync(() => {
+					logger("handler.completed", "Transfer finished", result);
+				}),
+			),
+			Effect.catchAll((error) =>
+				Effect.sync(() => {
+					logger("handler.failed", "Transfer failed", {
+						tag: error._tag,
+						step: error.step,
+						message: error.message,
+						status: error.status,
+					});
+				}),
+			),
+		);
+		context.waitUntil(Effect.runPromise(job));
 	},
 } satisfies ExportedHandler<Cloudflare.Env>;
