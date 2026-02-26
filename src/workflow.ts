@@ -45,24 +45,6 @@ const resolveFileExtension = (videoUrl: string): string => {
 	}
 };
 
-const createDeterministicFileName = (videoUrl: string): Effect.Effect<string, DownloadError> =>
-	Effect.tryPromise({
-		try: async () => {
-			const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(videoUrl));
-			const hash = Array.from(new Uint8Array(digest))
-				.slice(0, 8)
-				.map((item) => item.toString(16).padStart(2, "0"))
-				.join("");
-			return `helpspeaking-${hash}.${resolveFileExtension(videoUrl)}`;
-		},
-		catch: (error) =>
-			new DownloadError({
-				step: "create-deterministic-filename",
-				message: toErrorMessage(error),
-				cause: error,
-			}),
-	});
-
 const downloadVideo = ({
 	video,
 	logger,
