@@ -1,6 +1,12 @@
 import { Effect } from "effect";
 import { loadConfig } from "./config";
-import { DownloadError, DriveError, isRetryableHttpStatus, toErrorMessage } from "./errors";
+import {
+	AutomationError,
+	DownloadError,
+	DriveError,
+	isRetryableHttpStatus,
+	toErrorMessage,
+} from "./errors";
 import { findExistingFile, requestAccessToken, uploadFileResumable } from "./google-drive";
 import type { LatestLessonVideo } from "./helpspeaking";
 import { fetchLatestLessonVideo } from "./helpspeaking";
@@ -177,7 +183,7 @@ export const runTransferWorkflow = ({
 }: {
 	readonly env: Cloudflare.Env;
 	readonly logger: DebugLogger;
-}): Effect.Effect<TransferWorkflowResult, DownloadError | DriveError> =>
+}): Effect.Effect<TransferWorkflowResult, AutomationError | DownloadError | DriveError> =>
 	Effect.gen(function* () {
 		const config = yield* loadConfig(env).pipe(
 			Effect.mapError(
@@ -198,16 +204,7 @@ export const runTransferWorkflow = ({
 				password: config.helpspeakingPassword,
 			},
 			logger,
-		}).pipe(
-			Effect.mapError(
-				(error) =>
-					new DriveError({
-						step: error.step,
-						message: error.message,
-						cause: error.cause,
-					}),
-			),
-		);
+		});
 		const fileName = latestLessonVideo.date;
 		logger("workflow.video", "Fetched latest lesson video metadata", {
 			lessonLabel: latestLessonVideo.lessonLabel,

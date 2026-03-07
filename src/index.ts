@@ -1,29 +1,15 @@
 import { Effect, pipe } from "effect";
+import type { AutomationError, DownloadError, DriveError } from "./errors";
 import { createDebugLogger } from "./logging";
 import { runTransferWorkflow } from "./workflow";
 
-const createErrorDetails = (error: unknown) => {
-	if (typeof error === "object" && error !== null) {
-		const details = error as {
-			readonly _tag?: unknown;
-			readonly step?: unknown;
-			readonly message?: unknown;
-			readonly status?: unknown;
-		};
-
-		return {
-			tag: typeof details._tag === "string" ? details._tag : "UnknownError",
-			step: typeof details.step === "string" ? details.step : "unknown",
-			message: typeof details.message === "string" ? details.message : String(error),
-			status: typeof details.status === "number" ? details.status : undefined,
-		};
-	}
-
+const createErrorDetails = (error: AutomationError | DownloadError | DriveError) => {
 	return {
-		tag: "UnknownError",
-		step: "unknown",
-		message: String(error),
-		status: undefined,
+		tag: error._tag,
+		step: error.step,
+		message: error.message,
+		status: "status" in error ? error.status : undefined,
+		screenshotUrl: "screenshotUrl" in error ? error.screenshotUrl : undefined,
 	};
 };
 
@@ -70,31 +56,28 @@ export default {
 	async fetch(_, env) {
 		const { requestId, logger } = createRequestLogger({ trigger: "fetch" });
 
-		try {
-			const result = await Effect.runPromise(
-				createTransferEffect({
-					env,
-					logger,
-				}),
-			);
-
-			return Response.json({
-				ok: true,
-				requestId,
-				result,
-			});
-		} catch (error) {
-			return Response.json(
-				{
-					ok: false,
-					requestId,
-					error: createErrorDetails(error),
-				},
-				{
-					status: 500,
-				},
-			);
-		}
+		return await Effect.runPromise(
+			pipe(
+				createTransferEffect({ env, logger }),
+				Effect.map((result) =>
+					Response.json({
+						ok: true,
+						requestId,
+						result,
+					}),
+				),
+				Effect.mapError((error) =>
+					Response.json(
+						{
+							ok: false,
+							requestId,
+							error: createErrorDetails(error),
+						},
+						{ status: 500 },
+					),
+				),
+			),
+		);
 	},
 	scheduled(controller, env, context) {
 		const { logger } = createRequestLogger({
@@ -104,11 +87,11 @@ export default {
 		});
 
 		const job = pipe(
-			createTransferEffect({
-				env,
-				logger,
+			createTransferEffect({ env, logger }),
+			Effect.catchAll((error) => {
+				logger("handler.failed", "Transfer failed", createErrorDetails(error));
+				return Effect.void;
 			}),
-			Effect.catchAll(() => Effect.void),
 		);
 		context.waitUntil(Effect.runPromise(job));
 	},
