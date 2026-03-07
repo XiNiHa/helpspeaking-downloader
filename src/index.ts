@@ -66,14 +66,16 @@ export default {
 						result,
 					}),
 				),
-				Effect.mapError((error) =>
-					Response.json(
-						{
-							ok: false,
-							requestId,
-							error: createErrorDetails(error),
-						},
-						{ status: 500 },
+				Effect.catchAll((error) =>
+					Effect.succeed(
+						Response.json(
+							{
+								ok: false,
+								requestId,
+								error: createErrorDetails(error),
+							},
+							{ status: 500 },
+						),
 					),
 				),
 			),
