@@ -16,8 +16,6 @@ export interface LatestLessonVideo {
 	readonly cookieHeader: string;
 }
 
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
 // biome-ignore lint/suspicious/noExplicitAny: needed by typescript extends
 type Action<TOut> = (page: Page, ...args: any[]) => Promise<TOut | { error: string }>;
 
@@ -222,7 +220,15 @@ export const fetchLatestLessonVideo = ({
 					});
 				}
 
-				await sleep(750);
+				const waitForIdResult = await waitForText(page, "아이디", 20_000);
+				if (waitForIdResult.error) {
+					throw new AutomationError({
+						step: "wait-for-id",
+						message: waitForIdResult.error.message,
+						screenshotUrl: waitForIdResult.error.screenshotUrl,
+					});
+				}
+
 				const formFillResult = await fillLoginForm(page, credentials);
 				if (formFillResult.error) {
 					throw new AutomationError({
