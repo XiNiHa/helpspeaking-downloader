@@ -8,6 +8,7 @@ export class ConfigError extends Data.TaggedError("ConfigError")<{
 export class AutomationError extends Data.TaggedError("AutomationError")<{
 	readonly step: string;
 	readonly message: string;
+	readonly screenshotUrl?: string;
 	readonly cause?: unknown;
 }> {}
 
