@@ -35,16 +35,6 @@ const parseContentLength = (value: string | null): number | undefined => {
 	return parsed;
 };
 
-const resolveFileExtension = (videoUrl: string): string => {
-	try {
-		const pathname = new URL(videoUrl).pathname;
-		const extension = pathname.match(/\.([a-z0-9]{2,5})$/i)?.[1]?.toLowerCase();
-		return extension ?? "mp4";
-	} catch {
-		return "mp4";
-	}
-};
-
 const downloadVideo = ({
 	video,
 	logger,
