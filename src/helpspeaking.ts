@@ -43,6 +43,7 @@ const withScreenshotOnError =
 						.screenshot({
 							type: "png",
 							fullPage: true,
+							captureBeyondViewport: true,
 						})
 						.then((buf) => `data:image/png;base64,${buf.toString("base64url")}`),
 				},
@@ -212,6 +213,7 @@ export const fetchLatestLessonVideo = ({
 
 			try {
 				const page = await browser.newPage();
+				await page.setViewport({ width: 800, height: 800 });
 				await page.goto("https://helpspeaking.kr", { waitUntil: "domcontentloaded" });
 				logger("helpspeaking.navigation", "Loaded helpspeaking home page");
 
