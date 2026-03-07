@@ -41,7 +41,7 @@ const withScreenshotOnError =
 					message: result.error,
 					screenshotUrl: await page
 						.screenshot({ type: "png" })
-						.then((buf) => `data:image/png;base64,${buf.toString("base64url")}`),
+						.then((buf) => `data:image/png;base64,${buf.toString("base64")}`),
 				},
 			};
 		}
