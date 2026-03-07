@@ -4,6 +4,7 @@ import type { DebugLogger } from "./logging";
 
 interface GoogleTokenResponse {
 	readonly access_token?: string;
+	readonly refresh_token?: string;
 	readonly expires_in?: number;
 }
 
@@ -51,13 +52,13 @@ const formatHttpFailureMessage = async (response: Response): Promise<string> => 
 	return `${response.status} ${response.statusText} - ${body.slice(0, 300)}`;
 };
 
-export const requestAccessToken = ({
+export const refreshTokens = ({
 	credentials,
 	logger,
 }: {
 	readonly credentials: DriveOAuthCredentials;
 	readonly logger: DebugLogger;
-}): Effect.Effect<string, DriveError> =>
+}): Effect.Effect<{ accessToken: string; refreshToken?: string }, DriveError> =>
 	Effect.tryPromise({
 		try: async () => {
 			const tokenBody = new URLSearchParams({
@@ -96,7 +97,7 @@ export const requestAccessToken = ({
 			logger("drive.auth", "Obtained OAuth access token", {
 				expiresIn: payload.expires_in,
 			});
-			return payload.access_token;
+			return { accessToken: payload.access_token, refreshToken: payload.refresh_token };
 		},
 		catch: (error) =>
 			error instanceof DriveError

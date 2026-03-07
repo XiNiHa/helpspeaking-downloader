@@ -1,13 +1,13 @@
 import { Effect } from "effect";
 import { loadConfig } from "./config";
 import {
-	AutomationError,
+	type AutomationError,
 	DownloadError,
 	DriveError,
 	isRetryableHttpStatus,
 	toErrorMessage,
 } from "./errors";
-import { findExistingFile, requestAccessToken, uploadFileResumable } from "./google-drive";
+import { findExistingFile, refreshTokens, uploadFileResumable } from "./google-drive";
 import type { LatestLessonVideo } from "./helpspeaking";
 import { fetchLatestLessonVideo } from "./helpspeaking";
 import type { DebugLogger } from "./logging";
@@ -212,14 +212,20 @@ export const runTransferWorkflow = ({
 			videoUrl: latestLessonVideo.videoUrl,
 		});
 
-		const accessToken = yield* requestAccessToken({
+		const { accessToken, refreshToken } = yield* refreshTokens({
 			credentials: {
 				clientId: config.googleClientId,
 				clientSecret: config.googleClientSecret,
-				refreshToken: config.googleRefreshToken,
+				refreshToken:
+					(yield* Effect.promise(() => env.KV.get("refreshToken", "text"))) ??
+					config.googleRefreshToken,
 			},
 			logger,
 		});
+
+		if (refreshToken) {
+			void env.KV.put("refreshToken", refreshToken);
+		}
 
 		const duplicate = yield* findExistingFile({
 			accessToken,

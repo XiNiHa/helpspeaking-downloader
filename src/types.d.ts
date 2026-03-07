@@ -1,5 +1,6 @@
 namespace Cloudflare {
 	interface Env {
+		KV: KVNamespace;
 		BROWSER: Fetcher;
 		HELPSPEAKING_USERNAME: string;
 		HELPSPEAKING_PASSWORD: string;
