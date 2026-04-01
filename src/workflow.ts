@@ -205,7 +205,7 @@ export const runTransferWorkflow = ({
 			},
 			logger,
 		});
-		const fileName = latestLessonVideo.date;
+		const fileName = `${latestLessonVideo.date}.mp4`;
 		logger("workflow.video", "Fetched latest lesson video metadata", {
 			lessonLabel: latestLessonVideo.lessonLabel,
 			fileName,
