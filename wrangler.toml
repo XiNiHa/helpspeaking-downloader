@@ -11,4 +11,4 @@ id = "4e9f2826ba9344d49893cb8c53e474e3"
 binding = "BROWSER"
 
 [triggers]
-crons = ["0 0 * * 7"]
+crons = ["0 0 * * *"]
