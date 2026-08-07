@@ -8,7 +8,7 @@ export interface HelpspeakingCredentials {
 	readonly password: string;
 }
 
-export interface LatestLessonVideo {
+export interface LessonVideo {
 	readonly lessonLabel: string;
 	readonly date: string;
 	readonly videoUrl: string;
@@ -131,8 +131,8 @@ const waitForText = withScreenshotOnError(async (page: Page, text: string, timeo
 		.catch(() => ({ error: `Failed to find text until timeout: ${text}` })),
 );
 
-const openLatestLessonRecord = withScreenshotOnError(
-	(page: Page): Promise<{ lessonLabel: string } | { error: string }> =>
+const getRecentLessonRecords = withScreenshotOnError(
+	(page: Page): Promise<{ lessonLabel: string; index: number }[] | { error: string }> =>
 		page.evaluate(() => {
 			const labels = document.querySelectorAll(".bold_label");
 			const recordLabel = [...labels].find((el) => el.textContent?.trim().startsWith("수업기록"));
@@ -149,7 +149,7 @@ const openLatestLessonRecord = withScreenshotOnError(
 					"button, a, [role='button'], input[type='button'], input[type='submit']",
 				),
 			);
-			const candidates: Array<{
+			const records: Array<{
 				readonly index: number;
 				readonly top: number;
 				readonly cardText: string;
@@ -168,30 +168,23 @@ const openLatestLessonRecord = withScreenshotOnError(
 				const top = Number.isFinite(element.getBoundingClientRect().top)
 					? element.getBoundingClientRect().top
 					: Number.MAX_SAFE_INTEGER;
-				candidates.push({
+				records.push({
 					index,
 					top,
 					cardText,
 				});
 			});
 
-			candidates.sort((left, right) => left.top - right.top);
-			const target = candidates[0];
-			const clickableElement = target && clickableElements[target.index];
-			if (!clickableElement) {
-				return {
-					error: 'failed to find a valid clickable element with either "확인하기" or "확인완료"',
-				};
-			}
-			clickableElement.click();
+			records.sort((left, right) => left.top - right.top);
 
-			return {
-				lessonLabel: target.cardText.slice(0, 120) || "수업기록",
-			};
+			return records.map((record) => ({
+				lessonLabel: record.cardText.slice(0, 120) || "수업기록",
+				index: record.index,
+			}));
 		}),
 );
 
-export const fetchLatestLessonVideo = ({
+export const fetchRecentLessonVideos = ({
 	browserBinding,
 	credentials,
 	logger,
@@ -199,7 +192,7 @@ export const fetchLatestLessonVideo = ({
 	readonly browserBinding: Fetcher;
 	readonly credentials: HelpspeakingCredentials;
 	readonly logger: DebugLogger;
-}): Effect.Effect<LatestLessonVideo, AutomationError> =>
+}): Effect.Effect<LessonVideo[], AutomationError> =>
 	Effect.tryPromise({
 		try: async () => {
 			const browser = await puppeteer.launch(browserBinding);
@@ -272,53 +265,102 @@ export const fetchLatestLessonVideo = ({
 				}
 				logger("helpspeaking.navigation", "Moved to 내수업 and found 수업기록");
 
-				const openLatestRecordResult = await openLatestLessonRecord(page);
-				if (openLatestRecordResult.error) {
+				const getRecentLessonRecordsResult = await getRecentLessonRecords(page);
+				if (getRecentLessonRecordsResult.error) {
 					throw new AutomationError({
-						step: "open-latest-record",
-						message: openLatestRecordResult.error.message,
-						screenshotUrl: openLatestRecordResult.error.screenshotUrl,
+						step: "get-recent-lesson-records",
+						message: getRecentLessonRecordsResult.error.message,
+						screenshotUrl: getRecentLessonRecordsResult.error.screenshotUrl,
 					});
 				}
-				logger("helpspeaking.record", "Opened latest 수업기록", openLatestRecordResult);
+				logger(
+					"helpspeaking.record",
+					`Found ${getRecentLessonRecordsResult.out.length} 수업기록`,
+					getRecentLessonRecordsResult.out.map((record) => record.lessonLabel),
+				);
 
-				await page.waitForSelector("video source", { timeout: 20_000 });
-				const sourceInfo = await page.evaluate(() => {
-					const source = document.querySelector<HTMLSourceElement>("video source");
-					if (!source) {
-						return null;
+				const videos: LessonVideo[] = [];
+
+				for (const record of getRecentLessonRecordsResult.out) {
+					try {
+						const result = await withScreenshotOnError((page: Page) =>
+							page.evaluate((recordIndex) => {
+								const labels = document.querySelectorAll(".bold_label");
+								const recordLabel = [...labels].find((el) =>
+									el.textContent?.trim().startsWith("수업기록"),
+								);
+								if (!recordLabel) return { error: 'failed to find "수업기록" label' };
+								const recordTable = (function findTable(el: Element) {
+									const sibling = el.nextElementSibling;
+									if (!sibling || sibling?.tagName === "TABLE") return sibling;
+									return findTable(sibling);
+								})(recordLabel);
+								if (!recordTable) return { error: "failed to find the record table" };
+
+								const clickableElements = Array.from(
+									recordTable.querySelectorAll<HTMLElement>(
+										"button, a, [role='button'], input[type='button'], input[type='submit']",
+									),
+								);
+								clickableElements[recordIndex]?.click();
+								return { success: true };
+							}, record.index),
+						)(page);
+						if (result.error) {
+							throw new AutomationError({
+								step: "get-lesson-video",
+								message: result.error.message,
+								screenshotUrl: result.error.screenshotUrl,
+							});
+						}
+
+						try {
+							await page.waitForSelector("video source", { timeout: 10_000 });
+						} catch {
+							logger("helpspeaking.record", "No video source found for record", record.lessonLabel);
+							continue;
+						}
+
+						const sourceInfo = await page.evaluate(() => {
+							const source = document.querySelector<HTMLSourceElement>("video source");
+							if (!source) {
+								return null;
+							}
+
+							return {
+								src: source.getAttribute("src"),
+								pageUrl: window.location.href,
+							};
+						});
+						if (!sourceInfo?.src) {
+							throw new AutomationError({
+								step: "extract-video-source",
+								message: "video source tag exists but src is missing",
+							});
+						}
+						const videoUrl = new URL(sourceInfo.src, sourceInfo.pageUrl).toString();
+						const cookies = await page.cookies(videoUrl);
+						const cookieHeader = cookies
+							.map((cookie) => `${cookie.name}=${cookie.value}`)
+							.join("; ");
+						logger("helpspeaking.video", "Extracted video source URL", {
+							videoUrl,
+							cookieCount: cookies.length,
+						});
+						const date = record.lessonLabel.match(/\d\d\d\d\.\d\d?\.\d\d?/)?.[0] ?? "unknown";
+						videos.push({
+							lessonLabel: record.lessonLabel,
+							date,
+							videoUrl,
+							referer: sourceInfo.pageUrl,
+							cookieHeader,
+						});
+					} finally {
+						await page.goBack();
 					}
-
-					return {
-						src: source.getAttribute("src"),
-						pageUrl: window.location.href,
-					};
-				});
-				if (!sourceInfo?.src) {
-					throw new AutomationError({
-						step: "extract-video-source",
-						message: "video source tag exists but src is missing",
-					});
 				}
 
-				const videoUrl = new URL(sourceInfo.src, sourceInfo.pageUrl).toString();
-				const cookies = await page.cookies(videoUrl);
-				const cookieHeader = cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
-				logger("helpspeaking.video", "Extracted video source URL", {
-					videoUrl,
-					cookieCount: cookies.length,
-				});
-
-				const date =
-					openLatestRecordResult.out.lessonLabel.match(/\d\d\d\d\.\d\d?\.\d\d?/)?.[0] ?? "unknown";
-
-				return {
-					lessonLabel: openLatestRecordResult.out.lessonLabel,
-					date,
-					videoUrl,
-					referer: sourceInfo.pageUrl,
-					cookieHeader,
-				} satisfies LatestLessonVideo;
+				return videos;
 			} finally {
 				await browser.close();
 				logger("helpspeaking.browser", "Browser closed");

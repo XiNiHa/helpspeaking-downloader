@@ -8,8 +8,8 @@ import {
 	toErrorMessage,
 } from "./errors";
 import { findExistingFile, refreshTokens, uploadFileResumable } from "./google-drive";
-import type { LatestLessonVideo } from "./helpspeaking";
-import { fetchLatestLessonVideo } from "./helpspeaking";
+import type { LessonVideo } from "./helpspeaking";
+import { fetchRecentLessonVideos } from "./helpspeaking";
 import type { DebugLogger } from "./logging";
 
 const MAX_UPLOAD_ATTEMPTS = 3;
@@ -45,7 +45,7 @@ const downloadVideo = ({
 	video,
 	logger,
 }: {
-	readonly video: LatestLessonVideo;
+	readonly video: LessonVideo;
 	readonly logger: DebugLogger;
 }): Effect.Effect<DownloadedVideo, DownloadError> =>
 	Effect.tryPromise({
@@ -111,7 +111,7 @@ const uploadWithRetry = ({
 	logger,
 }: {
 	readonly attempt: number;
-	readonly video: LatestLessonVideo;
+	readonly video: LessonVideo;
 	readonly accessToken: string;
 	readonly folderId: string;
 	readonly fileName: string;
@@ -183,7 +183,7 @@ export const runTransferWorkflow = ({
 }: {
 	readonly env: Cloudflare.Env;
 	readonly logger: DebugLogger;
-}): Effect.Effect<TransferWorkflowResult, AutomationError | DownloadError | DriveError> =>
+}): Effect.Effect<TransferWorkflowResult[], AutomationError | DownloadError | DriveError> =>
 	Effect.gen(function* () {
 		const config = yield* loadConfig(env).pipe(
 			Effect.mapError(
@@ -197,7 +197,7 @@ export const runTransferWorkflow = ({
 		);
 		logger("workflow.config", "Loaded required Worker bindings");
 
-		const latestLessonVideo = yield* fetchLatestLessonVideo({
+		const recentLessonVideos = yield* fetchRecentLessonVideos({
 			browserBinding: env.BROWSER,
 			credentials: {
 				username: config.helpspeakingUsername,
@@ -205,12 +205,14 @@ export const runTransferWorkflow = ({
 			},
 			logger,
 		});
-		const fileName = `${latestLessonVideo.date}.mp4`;
-		logger("workflow.video", "Fetched latest lesson video metadata", {
-			lessonLabel: latestLessonVideo.lessonLabel,
-			fileName,
-			videoUrl: latestLessonVideo.videoUrl,
-		});
+		logger(
+			"workflow.video",
+			"Fetched recent lesson videos metadata",
+			recentLessonVideos.map((video) => ({
+				lessonLabel: video.lessonLabel,
+				videoUrl: video.videoUrl,
+			})),
+		);
 
 		const { accessToken, refreshToken } = yield* refreshTokens({
 			credentials: {
@@ -227,38 +229,46 @@ export const runTransferWorkflow = ({
 			void env.KV.put("refreshToken", refreshToken);
 		}
 
-		const duplicate = yield* findExistingFile({
-			accessToken,
-			folderId: config.googleDriveFolderId,
-			fileName,
-			logger,
-		});
-		if (duplicate) {
-			logger("workflow.duplicate", "Duplicate found, skipping upload", {
+		const results: TransferWorkflowResult[] = [];
+
+		for (const video of recentLessonVideos) {
+			const fileName = `${video.date}.mp4`;
+			const duplicate = yield* findExistingFile({
+				accessToken,
+				folderId: config.googleDriveFolderId,
 				fileName,
-				duplicateId: duplicate.id,
+				logger,
 			});
-			return {
-				status: "skipped",
+			if (duplicate) {
+				logger("workflow.duplicate", "Duplicate found, skipping upload", {
+					fileName,
+					duplicateId: duplicate.id,
+				});
+				results.push({
+					status: "skipped",
+					fileName,
+					lessonLabel: video.lessonLabel,
+					driveFileId: duplicate.id,
+				});
+				continue;
+			}
+
+			const uploadedFile = yield* uploadWithRetry({
+				attempt: 1,
+				video,
+				accessToken,
+				folderId: config.googleDriveFolderId,
 				fileName,
-				lessonLabel: latestLessonVideo.lessonLabel,
-				driveFileId: duplicate.id,
-			} satisfies TransferWorkflowResult;
+				logger,
+			});
+
+			results.push({
+				status: "uploaded",
+				fileName,
+				lessonLabel: video.lessonLabel,
+				driveFileId: uploadedFile.id,
+			});
 		}
 
-		const uploadedFile = yield* uploadWithRetry({
-			attempt: 1,
-			video: latestLessonVideo,
-			accessToken,
-			folderId: config.googleDriveFolderId,
-			fileName,
-			logger,
-		});
-
-		return {
-			status: "uploaded",
-			fileName,
-			lessonLabel: latestLessonVideo.lessonLabel,
-			driveFileId: uploadedFile.id,
-		} satisfies TransferWorkflowResult;
+		return results;
 	});
