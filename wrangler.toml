@@ -1,14 +1,80 @@
 name = "helpspeaking-downloader"
-compatibility_date = "2025-08-23"
-main = "./src/index.ts"
+account_id = "58f0bd4959b8fa1c0c9ea153f6db2c69"
+compatibility_date = "2026-10-01"
+main = "./src/worker/index.ts"
 compatibility_flags = ["nodejs_compat"]
+routes = [{ pattern = "helpspeaking.xiniha.dev", custom_domain = true }]
+workers_dev = false
+preview_urls = false
 
-[[kv_namespaces]]
-binding = "KV"
-id = "4e9f2826ba9344d49893cb8c53e474e3"
+[vars]
+APP_URL = "https://helpspeaking.xiniha.dev"
+MEDIA_BASE_URL = "https://helpspeaking-media.xiniha.dev"
+R2_ENDPOINT = "https://58f0bd4959b8fa1c0c9ea153f6db2c69.r2.cloudflarestorage.com"
+EMAIL_FROM = "helpspeaking@xiniha.dev"
+EMAIL_TO = "justus.shin@gmail.com"
+R2_BUCKET = "helpspeaking-media"
+
+[secrets]
+required = [
+	"HELPSPEAKING_USERNAME",
+	"HELPSPEAKING_PASSWORD",
+	"UNLOCK_PATTERN",
+	"SESSION_SECRET",
+	"R2_ACCESS_KEY_ID",
+	"R2_SECRET_ACCESS_KEY",
+]
+
+[observability]
+enabled = true
+
+[assets]
+not_found_handling = "single-page-application"
+run_worker_first = ["/api", "/api/*"]
 
 [browser]
 binding = "BROWSER"
 
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "helpspeaking-media"
+remote = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "helpspeaking"
+database_id = "fd910205-00c1-459b-9152-4f2783c837a5"
+migrations_dir = "drizzle"
+migrations_pattern = "drizzle/*/migration.sql"
+remote = true
+
+[[workflows]]
+name = "helpspeaking-run"
+binding = "RUN_WORKFLOW"
+class_name = "RunWorkflow"
+
+[[durable_objects.bindings]]
+name = "TRANSCODER"
+class_name = "Transcoder"
+
+[[containers]]
+class_name = "Transcoder"
+image = "./container/Dockerfile"
+instance_type = "standard-4"
+max_instances = 3
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Transcoder"]
+
+[[ratelimits]]
+name = "UNLOCK_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
+
+[[send_email]]
+name = "EMAIL"
+destination_address = "justus.shin@gmail.com"
+
 [triggers]
-crons = ["0 0 * * *"]
+crons = ["0 */6 * * *"]

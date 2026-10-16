@@ -5,27 +5,48 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build",
+		"build": "tsc -b && vite build",
 		"preview": "vite preview",
-		"deploy": "wrangler deploy",
+		"deploy": "pnpm build && wrangler deploy",
+		"typegen": "wrangler types src/worker/worker-configuration.d.ts",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "wrangler d1 migrations apply DB --remote",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
 		"format": "oxfmt",
 		"format:check": "oxfmt --check"
 	},
 	"dependencies": {
-		"@cloudflare/puppeteer": "^1.0.6",
-		"effect": "^3.19.19"
+		"@cloudflare/puppeteer": "^1.4.0",
+		"@effect/platform-browser": "4.0.5",
+		"@effect/sql-d1": "4.0.5",
+		"drizzle-orm": "1.0.0-rc.5-5935859",
+		"effect": "4.0.5",
+		"foldkit": "0.168.0"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.25.5",
-		"@cloudflare/workers-types": "^4.20260305.0",
-		"@effect/language-service": "^0.76.0",
+		"@cloudflare/vite-plugin": "^1.64.0",
+		"@effect/language-service": "^0.87.4",
+		"@foldkit/vite-plugin": "0.27.1",
+		"@tailwindcss/vite": "4.3.3",
+		"drizzle-kit": "1.0.0-rc.5-5935859",
 		"oxfmt": "^0.35.0",
 		"oxlint": "^1.50.0",
+		"tailwindcss": "4.3.3",
 		"typescript": "~5.9.3",
-		"vite": "^7.3.1",
-		"wrangler": "^4.68.1"
+		"vite": "8.3.4",
+		"vite-plugin-pwa": "2.0.0",
+		"workbox-window": "7.4.1",
+		"wrangler": "^4.151.1"
 	},
-	"packageManager": "pnpm@10.30.2"
+	"packageManager": "pnpm@10.30.2",
+	"pnpm": {
+		"peerDependencyRules": {
+			"allowedVersions": {
+				"foldkit>effect": "4.0.5",
+				"foldkit>@effect/platform-browser": "4.0.5",
+				"@foldkit/vite-plugin>effect": "4.0.5"
+			}
+		}
+	}
 }

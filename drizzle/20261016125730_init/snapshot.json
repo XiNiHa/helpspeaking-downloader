@@ -1,0 +1,269 @@
+{
+	"version": "7",
+	"dialect": "sqlite",
+	"id": "b6f4399c-c73b-43ac-8fd3-e94ffb10aff9",
+	"prevIds": ["00000000-0000-0000-0000-000000000000"],
+	"ddl": [
+		{
+			"name": "lessons",
+			"entityType": "tables"
+		},
+		{
+			"name": "runs",
+			"entityType": "tables"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "tutor",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "status",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "object_key",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "size",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "real",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "duration",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "phase",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "real",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "progress",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "phase_started_at",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "error",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "created_at",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "updated_at",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "trigger",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "lesson_id",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "status",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "step",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "error",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "screenshot",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "started_at",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "finished_at",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"columns": ["id"],
+			"nameExplicit": false,
+			"name": "lessons_pk",
+			"table": "lessons",
+			"entityType": "pks"
+		},
+		{
+			"columns": ["id"],
+			"nameExplicit": false,
+			"name": "runs_pk",
+			"table": "runs",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				{
+					"value": "status",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "lessons_status_idx",
+			"entityType": "indexes",
+			"table": "lessons"
+		},
+		{
+			"columns": [
+				{
+					"value": "started_at",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "runs_started_at_idx",
+			"entityType": "indexes",
+			"table": "runs"
+		}
+	],
+	"renames": []
+}
