@@ -35,3 +35,12 @@ export const runs = sqliteTable(
 	},
 	(table) => [index("runs_started_at_idx").on(table.startedAt)],
 );
+
+export const unlockFailures = sqliteTable(
+	"unlock_failures",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
+		failedAt: integer("failed_at").notNull(),
+	},
+	(table) => [index("unlock_failures_failed_at_idx").on(table.failedAt)],
+);

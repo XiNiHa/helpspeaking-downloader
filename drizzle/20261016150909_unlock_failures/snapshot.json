@@ -1,0 +1,314 @@
+{
+	"version": "7",
+	"dialect": "sqlite",
+	"id": "60283d00-08ed-4361-883e-34448a3fd68a",
+	"prevIds": ["b6f4399c-c73b-43ac-8fd3-e94ffb10aff9"],
+	"ddl": [
+		{
+			"name": "lessons",
+			"entityType": "tables"
+		},
+		{
+			"name": "runs",
+			"entityType": "tables"
+		},
+		{
+			"name": "unlock_failures",
+			"entityType": "tables"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "tutor",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "status",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "object_key",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "size",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "real",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "duration",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "phase",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "real",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "progress",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "phase_started_at",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "error",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "created_at",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "updated_at",
+			"entityType": "columns",
+			"table": "lessons"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "trigger",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "lesson_id",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "status",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "step",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "error",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "screenshot",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "started_at",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "finished_at",
+			"entityType": "columns",
+			"table": "runs"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": true,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "unlock_failures"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "failed_at",
+			"entityType": "columns",
+			"table": "unlock_failures"
+		},
+		{
+			"columns": ["id"],
+			"nameExplicit": false,
+			"name": "lessons_pk",
+			"table": "lessons",
+			"entityType": "pks"
+		},
+		{
+			"columns": ["id"],
+			"nameExplicit": false,
+			"name": "runs_pk",
+			"table": "runs",
+			"entityType": "pks"
+		},
+		{
+			"columns": ["id"],
+			"nameExplicit": false,
+			"name": "unlock_failures_pk",
+			"table": "unlock_failures",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				{
+					"value": "status",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "lessons_status_idx",
+			"entityType": "indexes",
+			"table": "lessons"
+		},
+		{
+			"columns": [
+				{
+					"value": "started_at",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "runs_started_at_idx",
+			"entityType": "indexes",
+			"table": "runs"
+		},
+		{
+			"columns": [
+				{
+					"value": "failed_at",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "unlock_failures_failed_at_idx",
+			"entityType": "indexes",
+			"table": "unlock_failures"
+		}
+	],
+	"renames": []
+}

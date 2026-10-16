@@ -54,7 +54,7 @@ export const isPolling = (library: Library): boolean =>
 const unlockFailureReason = (failure: UnlockFailure): string =>
 	Match.value(failure).pipe(
 		Match.when("WrongPattern", () => "패턴이 틀렸어요"),
-		Match.when("TooManyAttempts", () => "시도가 너무 많아요. 1분 뒤에 다시 해 보세요."),
+		Match.when("TooManyAttempts", () => "시도가 너무 많아요. 잠시 후 다시 해 보세요."),
 		Match.when("Network", () => "서버에 연결할 수 없어요"),
 		Match.exhaustive,
 	);

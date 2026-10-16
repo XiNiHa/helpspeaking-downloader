@@ -16,6 +16,7 @@ import { lessonDownloadFileName } from "../shared/lesson";
 import { Db } from "./db";
 import { findLesson, listLessons, markDeleted } from "./lessons";
 import { latestRun, startRun } from "./runs";
+import { isUnlockLockedOut, recordUnlockFailure } from "./unlock-failures";
 import {
 	isCorrectPattern,
 	isValidSessionToken,
@@ -72,10 +73,11 @@ const SessionHandlers = HttpApiBuilder.group(Api, "session", (handlers) =>
 			const { success } = yield* Effect.promise(() =>
 				env.UNLOCK_LIMITER.limit({ key: request.headers["cf-connecting-ip"] ?? "unknown" }),
 			);
-			if (!success) {
+			if (!success || (yield* isUnlockLockedOut())) {
 				return yield* new TooManyAttempts();
 			}
 			if (!(yield* isCorrectPattern(payload.pattern))) {
+				yield* recordUnlockFailure();
 				return yield* new WrongPattern();
 			}
 			yield* setSessionCookie;
